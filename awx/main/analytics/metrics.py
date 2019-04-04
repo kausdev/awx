@@ -18,14 +18,13 @@ from awx.conf.license import get_license
 from awx.main.utils import (get_awx_version, get_ansible_version,
                             get_custom_venv_choices)
 from awx.main import models
-from awx.main.analytics.collectors import counts
+from awx.main.analytics.collectors import counts, instance_info
 from django.contrib.sessions.models import Session
 from awx.main.analytics import register
 
 
-SYSTEM_INFO = Info('awx_system_info', 'AWX System Information')
-TOTAL_SESSIONS = Gauge('awx_active_sessions', 'Number of active session')
-CUSTOM_VENVS = Gauge('awx_custom_virtualenvs', 'Number of virtualenvs')
+SYSTEM_INFO = Info('awx_system', 'AWX System Information')
+
 ORG_COUNT = Gauge('awx_organizations', 'Number of organizations')
 USER_COUNT = Gauge('awx_users', 'Number of users')
 TEAM_COUNT = Gauge('awx_teams', 'Number of teams')
@@ -36,6 +35,11 @@ WFJT_COUNT = Gauge('awx_workflow_job_templates', 'Number of workflow job templat
 HOST_COUNT = Gauge('awx_hosts', 'Number of hosts')
 SCHEDULE_COUNT = Gauge('awx_schedules', 'Number of schedules')
 INV_SCRIPT_COUNT = Gauge('awx_inventory_scripts', 'Number of invetory scripts')
+TOTAL_SESSIONS = Gauge('awx_active_sessions', 'Number of active session')
+CUSTOM_VENVS = Gauge('awx_custom_virtualenvs', 'Number of virtualenvs')
+ACTIVE_USER_SESSIONS = Gauge('awx_active_user_sessions', 'Number of Tower users logged in')
+RUNNING_JOBS = Gauge('awx_running_jobs', 'Number of running jobs on the Tower system')
+ACTIVE_HOST_COUNT = Gauge('awx_active_hosts', 'Number of active hosts counting towards subscription count')
 
 def metrics():
     license_info = get_license(show_key=False)
@@ -51,9 +55,23 @@ def metrics():
                       'external_logger_type': getattr(settings, 'LOG_AGGREGATOR_TYPE', 'None')})
 
     current_counts = counts(datetime.now()) 
-
+    
+    ORG_COUNT.set(current_counts['organization'])
+    USER_COUNT.set(current_counts['user'])
+    TEAM_COUNT.set(current_counts['team'])
+    INV_COUNT.set(current_counts['inventory'])
+    PROJ_COUNT.set(current_counts['project'])
+    JT_COUNT.set(current_counts['job_template'])
+    WFJT_COUNT.set(current_counts['workflow_job_template'])
+    HOST_COUNT.set(current_counts['host'])
+    SCHEDULE_COUNT.set(current_counts['schedule'])
+    INV_SCRIPT_COUNT.set(current_counts['custom_inventory_script'])
     CUSTOM_VENVS.set(current_counts['custom_virtualenvs'])
     TOTAL_SESSIONS.set(current_counts['active_sessions'])
+    ACTIVE_USER_SESSIONS.set(current_counts['active_user_sessions'])
+    RUNNING_JOBS.set(current_counts['running_jobs'])
+    ACTIVE_HOST_COUNT.set(current_counts['active_host_count'])
+
 
     return generate_latest()
 
