@@ -4,6 +4,8 @@ from datetime import datetime
 from prometheus_client import (
     Gauge,
     Info,
+    ProcessCollector,
+    PROCESS_COLLECTOR,
     generate_latest
 )
 
@@ -23,8 +25,10 @@ from django.contrib.sessions.models import Session
 from awx.main.analytics import register
 
 
-SYSTEM_INFO = Info('awx_system', 'AWX System Information')
+# Override the default process collector and give it a namespace.
+PROCESS_COLLECTOR = ProcessCollector(namespace='awx')
 
+SYSTEM_INFO = Info('awx_system', 'AWX System Information')
 ORG_COUNT = Gauge('awx_organizations_total', 'Number of organizations')
 USER_COUNT = Gauge('awx_users_total', 'Number of users')
 TEAM_COUNT = Gauge('awx_teams_total', 'Number of teams')
