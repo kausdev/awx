@@ -6,6 +6,7 @@ import {
     AWX_E2E_CLUSTER_HOST,
     AWX_E2E_CLUSTER_PORT,
     AWX_E2E_CLUSTER_WORKERS,
+    AWX_E2E_HEADLESS_ENABLED,
     AWX_E2E_LAUNCH_URL,
     AWX_E2E_TIMEOUT_ASYNC,
     AWX_E2E_TIMEOUT_MEDIUM,
@@ -27,7 +28,18 @@ module.exports = {
             selenium_host: 'localhost',
             selenium_port: 9515,
             default_path_prefix: '',
-            desiredCapabilities: { browserName: 'chrome' },
+            desiredCapabilities: {
+                browserName: 'chrome',
+                chromeOptions: {
+                    args: [
+                        AWX_E2E_HEADLESS_ENABLED ? 'headless' : 'null',
+                        'disable-web-security',
+                        'ignore-certificate-errors',
+                        'no-sandbox',
+                        'disable-gpu'
+                    ]
+                }
+            },
             test_workers: { enabled: false },
             globals: {
                 launch_url: AWX_E2E_LAUNCH_URL,
