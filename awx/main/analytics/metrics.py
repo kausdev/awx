@@ -2,16 +2,18 @@ import os
 from datetime import datetime
 
 from prometheus_client import (
+    REGISTRY,
+    PROCESS_COLLECTOR,
+    PLATFORM_COLLECTOR,
+    GC_COLLECTOR,
     Gauge,
     Info,
-    ProcessCollector,
-    PROCESS_COLLECTOR,
     generate_latest
 )
 
 from django.contrib.sessions.models import Session
 
-# Temporary Imports 
+# Temporary Imports
 from django.db import connection
 from django.db.models import Count
 from django.conf import settings
@@ -25,8 +27,10 @@ from django.contrib.sessions.models import Session
 from awx.main.analytics import register
 
 
-# Override the default process collector and give it a namespace.
-PROCESS_COLLECTOR = ProcessCollector(namespace='awx')
+REGISTRY.unregister(PROCESS_COLLECTOR)
+REGISTRY.unregister(PLATFORM_COLLECTOR)
+REGISTRY.unregister(GC_COLLECTOR)
+
 
 SYSTEM_INFO = Info('awx_system', 'AWX System Information')
 ORG_COUNT = Gauge('awx_organizations_total', 'Number of organizations')
@@ -43,9 +47,10 @@ USER_SESSIONS = Gauge('awx_sessions_total', 'Number of sessions', ['type',])
 CUSTOM_VENVS = Gauge('awx_custom_virtualenvs_total', 'Number of virtualenvs')
 RUNNING_JOBS = Gauge('awx_running_jobs_total', 'Number of running jobs on the Tower system')
 
+
 def metrics():
     license_info = get_license(show_key=False)
-    SYSTEM_INFO.info({'system_uuid': settings.SYSTEM_UUID, 
+    SYSTEM_INFO.info({'system_uuid': settings.SYSTEM_UUID,
                       'tower_url_base': settings.TOWER_URL_BASE,
                       'tower_version': get_awx_version(),
                       'ansible_version': get_ansible_version(),
@@ -56,8 +61,8 @@ def metrics():
                       'external_logger_enabled': str(settings.LOG_AGGREGATOR_ENABLED),
                       'external_logger_type': getattr(settings, 'LOG_AGGREGATOR_TYPE', 'None')})
 
-    current_counts = counts(datetime.now()) 
-    
+    current_counts = counts(datetime.now())
+
     ORG_COUNT.set(current_counts['organization'])
     USER_COUNT.set(current_counts['user'])
     TEAM_COUNT.set(current_counts['team'])
